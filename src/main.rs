@@ -4,6 +4,7 @@ const OUT: &str = "dist";
 
 fn main() {
     let dir = walkdir::WalkDir::new("content");
+    let _ = std::fs::create_dir_all(format!("{}/content", OUT));
     for entry in dir {
         if let Ok(file) = entry {
             if !file.file_type().is_file() {
