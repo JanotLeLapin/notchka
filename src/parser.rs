@@ -1,5 +1,11 @@
 use markdown;
 
+#[cfg(debug_assertions)]
+const STYLESHEET_URL: &str = "./style/base.css";
+
+#[cfg(not(debug_assertions))]
+const STYLESHEET_URL: &str = "/uni/style/base.css";
+
 const KATEX_SCRIPT: &str = r#"
 document.addEventListener('DOMContentLoaded', function() {
     renderMathInElement(document.body, {
@@ -17,7 +23,7 @@ markup::define! {
         @markup::doctype()
         html[lang="fr"] {
             head {
-                link[rel="stylesheet", href="../style/base.css"];
+                link[rel="stylesheet", href=STYLESHEET_URL];
 
                 @if let Some(title) = &page.meta.title {
                     title { @title }

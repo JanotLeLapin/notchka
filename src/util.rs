@@ -1,4 +1,4 @@
-pub fn walk_dir(path: &str, f: fn(name: &str, ext: &str, path: &std::path::Path)) {
+pub fn walk_dir(path: &str, f: fn(name: &str, ext: &str, path: &std::path::Path) -> std::io::Result<()>) {
     for entry in walkdir::WalkDir::new(path) {
         if let Ok(file) = entry {
             if !file.file_type().is_file() {
@@ -15,7 +15,7 @@ pub fn walk_dir(path: &str, f: fn(name: &str, ext: &str, path: &std::path::Path)
                     ext = elem;
                 }
 
-                f(&name, ext, file.path());
+                let _ = f(&name, ext, file.path());
             }
         }
     }

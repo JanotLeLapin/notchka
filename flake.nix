@@ -42,9 +42,7 @@
 
       buildInputs = [ generator ];
       buildPhase = "generator";
-      installPhase = ''
-        cp -r dist/content $out
-      '';
+      installPhase = "cp -r dist $out";
     };
   });
 }
