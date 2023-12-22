@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 markdown = "1.0.0-alpha.16"
+markup = "0.15"
 
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"

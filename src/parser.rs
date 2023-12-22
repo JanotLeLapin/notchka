@@ -1,5 +1,21 @@
 use markdown;
 
+markup::define! {
+    Template(page: Page) {
+        @markup::doctype()
+        html[lang="fr"] {
+            head {
+                @if let Some(title) = &page.meta.title {
+                    title { @title }
+                }
+            }
+            body {
+                @markup::raw(page.src.clone())
+            }
+        }
+    }
+}
+
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Meta {
     title: Option<String>,
@@ -33,4 +49,8 @@ pub fn parse_markdown(src: &str) -> Page {
         src: markdown::to_html(&src),
         meta: meta.unwrap_or(Meta::default()),
     }
+}
+
+pub fn make_page(page: Page) -> String {
+    Template { page }.to_string()
 }
