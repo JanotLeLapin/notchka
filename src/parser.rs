@@ -46,7 +46,7 @@ pub fn parse_markdown(src: &str) -> Page {
     }
 
     Page {
-        src: markdown::to_html(&src),
+        src: markdown::to_html(&src).replace("\n", ""),
         meta: meta.unwrap_or(Meta::default()),
     }
 }
