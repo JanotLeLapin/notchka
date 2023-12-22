@@ -17,6 +17,8 @@ markup::define! {
         @markup::doctype()
         html[lang="fr"] {
             head {
+                link[rel="stylesheet", href="../style/base.css"];
+
                 @if let Some(title) = &page.meta.title {
                     title { @title }
                 }
