@@ -1,12 +1,26 @@
-mod parser;
+mod md;
+mod html;
 mod util;
 
 const OUT: &str = "dist";
 
+#[derive(Debug, Default, serde::Deserialize)]
+pub struct Meta {
+    title: Option<String>,
+    css: Option<String>,
+    #[serde(default = "bool::default")]
+    maths: bool,
+}
+
+#[derive(Debug)]
+pub struct Page {
+    src: String,
+    meta: Meta,
+}
+
 fn compile_markdown(name: &str, _ext: &str, path: &std::path::Path) -> std::io::Result<()> {
     let content = std::fs::read_to_string(path)?;
-    let html = parser::parse_markdown(&content);
-    let page = parser::make_page(html);
+    let page = html::make_page(md::parse_markdown(&content));
 
     let out = path.strip_prefix("content").unwrap();
     let out = std::path::Path::new(OUT).join(out);

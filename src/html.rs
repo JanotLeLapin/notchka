@@ -1,5 +1,3 @@
-use markdown;
-
 #[cfg(debug_assertions)]
 const STYLESHEET_DIR: &str = "./style";
 
@@ -19,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 "#;
 
 markup::define! {
-    Template(page: Page) {
+    Template(page: crate::Page) {
         @markup::doctype()
         html[lang="fr"] {
             head {
@@ -66,52 +64,6 @@ markup::define! {
     }
 }
 
-#[derive(Debug, Default, serde::Deserialize)]
-pub struct Meta {
-    title: Option<String>,
-    css: Option<String>,
-    #[serde(default = "bool::default")]
-    maths: bool,
-}
-
-#[derive(Debug)]
-pub struct Page {
-    src: String,
-    meta: Meta,
-}
-
-pub fn parse_markdown(src: &str) -> Page {
-    let mut src = src.trim().to_string();
-    let mut meta: Option<Meta> = None;
-    if src.starts_with("---") {
-        // Frontmatter parsing
-        let trim = src.chars().skip(4).collect::<String>();
-        let mut iter = trim.split("\n---");
-
-        if let Some(frontmatter) = iter.next() {
-            meta = serde_yaml::from_str(frontmatter).ok();
-        }
-
-        src = match iter.next() {
-            Some(value) => value.to_string(),
-            None => String::new(),
-        };
-    }
-
-    let opts = markdown::Options {
-        compile: markdown::CompileOptions {
-            allow_dangerous_html: true,
-            ..Default::default()
-        },
-        parse: markdown::ParseOptions::default(),
-    };
-
-    Page {
-        src: markdown::to_html_with_options(&src, &opts).unwrap().replace("\n", ""),
-        meta: meta.unwrap_or(Meta::default()),
-    }
-}
-
-pub fn make_page(page: Page) -> String {
+pub fn make_page(page: crate::Page) -> String {
     Template { page }.to_string()
 }
