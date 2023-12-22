@@ -1,34 +1,22 @@
 #[cfg(debug_assertions)]
-const STYLESHEET_DIR: &str = "./style";
+const ROOT: &str = ".";
 
 #[cfg(not(debug_assertions))]
-const STYLESHEET_DIR: &str = "/uni/style";
-
-const KATEX_SCRIPT: &str = r#"
-document.addEventListener('DOMContentLoaded', function() {
-    renderMathInElement(document.body, {
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false},
-        ],
-        throwOnError : false
-    });
-});
-"#;
+const ROOT: &str = "/uni";
 
 markup::define! {
     Template(page: crate::Page) {
         @markup::doctype()
         html[lang="fr"] {
             head {
-                link[rel="stylesheet", href=format!("{}/base.css", STYLESHEET_DIR)];
+                link[rel="stylesheet", href=format!("{}/style/base.css", ROOT)];
 
                 @if let Some(title) = &page.meta.title {
                     title { @title }
                 }
 
                 @if let Some(css) = &page.meta.css {
-                    link[rel="stylesheet", href=format!("{}/{}.css", STYLESHEET_DIR, css)];
+                    link[rel="stylesheet", href=format!("{}/style/{}.css", ROOT, css)];
                 }
 
                 @if page.meta.maths {
@@ -51,10 +39,9 @@ markup::define! {
                         src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js",
                         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05",
                         crossorigin="anonymous",
-                        onload="renderMathInElement(document.body);"
                     ] {}
 
-                    script { @KATEX_SCRIPT }
+                    script[] { @std::fs::read_to_string("./script/maths.js").unwrap() }
                 }
             }
             body {
