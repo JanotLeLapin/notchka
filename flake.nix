@@ -23,7 +23,7 @@
     };
 
     manifest = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
-    generator =
+    ssg =
       let
         crate = pkgs.callPackage "${crate2nix}/tools.nix" { inherit pkgs; };
       in import (crate.generatedCargoNix {
@@ -36,14 +36,14 @@
     devShells.default = pkgs.mkShell {
       packages = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ];
     };
-    packages.generator = generator.rootCrate.build;
+    packages.ssg = ssg.rootCrate.build;
     packages.default = pkgs.stdenv.mkDerivation {
       name = "uni";
       version = manifest.version;
       src = ./.;
 
-      buildInputs = [ packages.generator ];
-      buildPhase = "generator";
+      buildInputs = [ packages.ssg ];
+      buildPhase = manifest.name;
       installPhase = "cp -r dist $out";
     };
   });
