@@ -1,10 +1,10 @@
 use markdown;
 
 #[cfg(debug_assertions)]
-const STYLESHEET_URL: &str = "./style/base.css";
+const STYLESHEET_DIR: &str = "./style";
 
 #[cfg(not(debug_assertions))]
-const STYLESHEET_URL: &str = "/uni/style/base.css";
+const STYLESHEET_DIR: &str = "/uni/style";
 
 const KATEX_SCRIPT: &str = r#"
 document.addEventListener('DOMContentLoaded', function() {
@@ -23,11 +23,16 @@ markup::define! {
         @markup::doctype()
         html[lang="fr"] {
             head {
-                link[rel="stylesheet", href=STYLESHEET_URL];
+                link[rel="stylesheet", href=format!("{}/base.css", STYLESHEET_DIR)];
 
                 @if let Some(title) = &page.meta.title {
                     title { @title }
                 }
+
+                @if let Some(css) = &page.meta.css {
+                    link[rel="stylesheet", href=format!("{}/{}.css", STYLESHEET_DIR, css)];
+                }
+
                 @if page.meta.maths {
                     link[
                         rel="stylesheet",
@@ -64,6 +69,7 @@ markup::define! {
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Meta {
     title: Option<String>,
+    css: Option<String>,
     #[serde(default = "bool::default")]
     maths: bool,
 }
@@ -92,8 +98,16 @@ pub fn parse_markdown(src: &str) -> Page {
         };
     }
 
+    let opts = markdown::Options {
+        compile: markdown::CompileOptions {
+            allow_dangerous_html: true,
+            ..Default::default()
+        },
+        parse: markdown::ParseOptions::default(),
+    };
+
     Page {
-        src: markdown::to_html(&src).replace("\n", ""),
+        src: markdown::to_html_with_options(&src, &opts).unwrap().replace("\n", ""),
         meta: meta.unwrap_or(Meta::default()),
     }
 }
