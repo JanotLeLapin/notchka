@@ -1,8 +1,8 @@
 #[cfg(debug_assertions)]
-const ROOT: &str = ".";
+const ROOT: &str = "./dist";
 
 #[cfg(not(debug_assertions))]
-const ROOT: &str = "/uni";
+const ROOT: &str = "/uni/dist";
 
 markup::define! {
     Template(page: crate::Page) {
@@ -41,7 +41,10 @@ markup::define! {
                         crossorigin="anonymous",
                     ] {}
 
-                    script[] { @std::fs::read_to_string("./script/maths.js").unwrap() }
+                    script[
+                        defer,
+                        src=format!("{}/script/maths.js", ROOT),
+                    ] {}
                 }
             }
             body {

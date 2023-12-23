@@ -44,7 +44,7 @@
 
       buildInputs = [ packages.ssg ];
       buildPhase = manifest.name;
-      installPhase = "cp -r dist $out";
+      installPhase = "cp -r build $out";
     };
   });
 }
