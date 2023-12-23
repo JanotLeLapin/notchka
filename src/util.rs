@@ -1,4 +1,11 @@
-pub fn walk_dir(path: &str, f: fn(name: &str, ext: &str, path: &std::path::Path) -> std::io::Result<()>) {
+pub struct File {
+    pub name: String,
+    pub ext: String,
+    pub path: String,
+}
+
+pub fn walk_dir(path: &str) -> Vec<File> {
+    let mut res = Vec::new();
     for entry in walkdir::WalkDir::new(path) {
         if let Ok(file) = entry {
             if !file.file_type().is_file() {
@@ -8,15 +15,20 @@ pub fn walk_dir(path: &str, f: fn(name: &str, ext: &str, path: &std::path::Path)
             if let Some(file_name) = file.file_name().to_str() {
                 let mut iter = file_name.split(".");
                 let mut name = String::new();
-                let mut ext = "";
+                let mut ext = String::new();
 
                 while let Some(elem) = iter.next() {
-                    name.push_str(ext);
-                    ext = elem;
+                    name.push_str(&ext);
+                    ext = elem.to_string();
                 }
 
-                let _ = f(&name, ext, file.path());
+                res.push(File {
+                    name,
+                    ext,
+                    path: file.path().to_str().unwrap().to_string(),
+                })
             }
         }
     }
+    res
 }
