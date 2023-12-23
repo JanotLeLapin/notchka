@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+colored = "2.1"
+
 walkdir = "2"
 
 markdown = "1.0.0-alpha.16"
