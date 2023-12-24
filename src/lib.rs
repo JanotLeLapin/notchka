@@ -3,6 +3,7 @@ pub mod html;
 pub mod sass;
 pub mod util;
 
+pub mod logging;
 pub mod server;
 
 pub const OUT: &str = "build";

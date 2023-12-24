@@ -28,21 +28,26 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
                 let dir: String = parent.split("/").skip(2).collect();
                 let dir = std::path::Path::new("style").join(dir);
                 match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
-                    Some(file) => match crate::sass::compile_scss(&file) {
-                        Some(result) => match result {
-                            Ok(content) => content,
-                            Err(e) => {
-                                println!("Failed to compile stylesheet '{}': {}", uri, e);
+                    Some(file) => {
+                        let start = std::time::Instant::now();
+                        match crate::sass::compile_scss(&file) {
+                            Some(result) => match result {
+                                Ok(content) => {
+                                    crate::logging::info_compiled(&file, &start);
+                                    content
+                                },
+                                Err(err) => {
+                                    crate::logging::error_compiled(&file, err);
+                                    String::new()
+                                }
+                            },
+                            None => {
+                                crate::logging::error_compiled(&file, Box::new(format!("Unknown format '{}'", file.ext)));
                                 String::new()
-                            }
-                        },
-                        None => {
-                            println!("Unknown stylesheet format: {}", file.ext);
-                            String::new()
+                            },
                         }
                     },
                     None => {
-                        println!("File at {:?} not found", dir);
                         String::new()
                     }
                 }
@@ -50,7 +55,12 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
             "html" => {
                 let dir = std::path::Path::new("content").join(&parent);
                 match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
-                    Some(file) => crate::html::make_page(crate::md::parse_markdown(&std::fs::read_to_string(file.path).unwrap()), None),
+                    Some(file) => {
+                        let start = std::time::Instant::now();
+                        let content = crate::html::make_page(crate::md::parse_markdown(&std::fs::read_to_string(&file.path).unwrap()), None);
+                        crate::logging::info_compiled(&file, &start);
+                        content
+                    },
                     None => "File not found".to_string(),
                 }
             },
