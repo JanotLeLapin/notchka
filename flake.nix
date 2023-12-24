@@ -43,7 +43,7 @@
       src = ./.;
 
       buildInputs = [ packages.ssg ];
-      buildPhase = manifest.name;
+      buildPhase = "${manifest.name} build";
       installPhase = "cp -r build $out";
     };
   });
