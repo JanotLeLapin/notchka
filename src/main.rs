@@ -8,7 +8,10 @@ enum Commands {
         #[arg(long)]
         prefix: Option<String>,
     },
-    Dev,
+    Dev {
+        #[arg(short, long)]
+        port: Option<u16>,
+    },
 }
 
 #[derive(Parser)]
@@ -67,8 +70,23 @@ async fn main() -> std::io::Result<()> {
 
             println!("{} (took {:?})", "Done".blue(), start.elapsed());
         },
-        Dev => {
-            ssg::server::server().await.unwrap();
+        Dev { port } => {
+            let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port.unwrap_or(8080)));
+            let listener = tokio::net::TcpListener::bind(addr).await?;
+
+            loop {
+                let (stream, _) = listener.accept().await?;
+                let io = hyper_util::rt::TokioIo::new(stream);
+
+                tokio::spawn(async move {
+                    if let Err(err) = hyper::server::conn::http1::Builder::new()
+                        .serve_connection(io, hyper::service::service_fn(server::service))
+                            .await
+                            {
+                                println!("Could not start dev server: {}", err);
+                            }
+                });
+            }
         },
     };
 

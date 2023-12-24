@@ -17,7 +17,7 @@ fn mime(ext: &str) -> String {
     format!("{}; charset=utf-8", mime)
 }
 
-async fn hello(req: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, std::convert::Infallible> {
+pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, std::convert::Infallible> {
     let (content_type, content) = {
         let uri: String = req.uri().to_string().chars().skip(1).collect();
         let parent = std::path::Path::new(&uri).parent().unwrap().to_string_lossy().into_owned();
@@ -69,23 +69,4 @@ async fn hello(req: Request<hyper::body::Incoming>) -> Result<Response<Full<Byte
         .unwrap();
 
     Ok(response)
-}
-
-pub async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 8080));
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-
-    loop {
-        let (stream, _) = listener.accept().await?;
-        let io = hyper_util::rt::TokioIo::new(stream);
-
-        tokio::spawn(async move {
-            if let Err(err) = hyper::server::conn::http1::Builder::new()
-                .serve_connection(io, hyper::service::service_fn(hello))
-                .await
-            {
-                println!("Could not start dev server: {}", err);
-            }
-        });
-    }
 }
