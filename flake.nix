@@ -36,15 +36,6 @@
     devShells.default = pkgs.mkShell {
       packages = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ];
     };
-    packages.ssg = ssg.rootCrate.build;
-    packages.default = pkgs.stdenv.mkDerivation {
-      name = "uni";
-      version = manifest.version;
-      src = ./.;
-
-      buildInputs = [ packages.ssg ];
-      buildPhase = "${manifest.name} build --prefix /uni/dist";
-      installPhase = "cp -r build $out";
-    };
+    packages.default = ssg.rootCrate.build;
   });
 }

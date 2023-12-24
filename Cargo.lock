@@ -510,6 +510,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "notchka"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "colored",
+ "grass",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "markdown",
+ "markup",
+ "serde",
+ "serde_yaml",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
 name = "num_cpus"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -727,24 +745,6 @@ checksum = "7b5fac59a5cb5dd637972e5fca70daf0523c9067fcdc4842f053dae04a18f8e9"
 dependencies = [
  "libc",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "ssg"
-version = "0.1.0"
-dependencies = [
- "clap",
- "colored",
- "grass",
- "http-body-util",
- "hyper",
- "hyper-util",
- "markdown",
- "markup",
- "serde",
- "serde_yaml",
- "tokio",
- "walkdir",
 ]
 
 [[package]]

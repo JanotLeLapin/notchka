@@ -35,10 +35,7 @@ markup::define! {
                         crossorigin="anonymous",
                     ] {}
 
-                    script[
-                        defer,
-                        src=format!("{}/script/maths.js", dist_prefix),
-                    ] {}
+                    script[defer] { @include_str!("../dist/katex.js") }
                 }
             }
             body {
