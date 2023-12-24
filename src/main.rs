@@ -23,7 +23,9 @@ pub struct Page {
     meta: Meta,
 }
 
-fn main() -> std::io::Result<()> {
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    /*
     let start = std::time::Instant::now();
 
     let _ = std::fs::remove_dir_all(OUT);
@@ -64,8 +66,9 @@ fn main() -> std::io::Result<()> {
     }
 
     println!("{} (took {:?})", "Done".blue(), start.elapsed());
+    */
 
-    let _ = server::start_server();
+    let _ = server::server().await;
 
     Ok(())
 }
