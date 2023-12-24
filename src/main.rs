@@ -30,7 +30,7 @@ async fn main() -> std::io::Result<()> {
         Build { prefix } => {
             let _ = std::fs::remove_dir_all(OUT);
 
-            for file in util::walk_dir("content") {
+            for file in walk_dir("content") {
                 let content = std::fs::read_to_string(&file.path)?;
                 let now = std::time::Instant::now();
                 let page = html::make_page(md::parse_markdown(&content), prefix.as_deref());
@@ -42,7 +42,7 @@ async fn main() -> std::io::Result<()> {
                 std::fs::write(out.join(format!("{}.html", file.name)), page)?;
             }
 
-            for file in util::walk_dir("style") {
+            for file in walk_dir("style") {
                 let now = std::time::Instant::now();
                 match sass::compile_scss(&file) {
                     Some(result) => match result {
@@ -59,7 +59,7 @@ async fn main() -> std::io::Result<()> {
                 };
             }
 
-            for file in util::walk_dir("dist") {
+            for file in walk_dir("dist") {
                 let out = std::path::Path::new(OUT).join(&file.path);
                 std::fs::create_dir_all(out.parent().unwrap())?;
                 std::fs::copy(&file.path, out)?;

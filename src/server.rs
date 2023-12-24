@@ -2,8 +2,8 @@ use http_body_util::Full;
 use hyper::{Request, Response};
 use hyper::body::Bytes;
 
-fn find_file(name: &str, path: &str) -> Option<crate::util::File> {
-    crate::util::walk_dir(path).into_iter().find(|f| f.name == name)
+fn find_file(name: &str, path: &str) -> Option<crate::File> {
+    crate::walk_dir(path).into_iter().find(|f| f.name == name)
 }
 
 fn mime(ext: &str) -> String {
@@ -22,7 +22,7 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
         let uri: String = req.uri().to_string().chars().skip(1).collect();
         let parent = std::path::Path::new(&uri).parent().unwrap().to_string_lossy().into_owned();
 
-        let file: crate::util::File = uri.to_string().into();
+        let file: crate::File = uri.to_string().into();
         let content = match file.ext.as_str() {
             "css" => {
                 let dir: String = parent.split("/").skip(2).collect();

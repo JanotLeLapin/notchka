@@ -8,7 +8,7 @@ fn color_message(msg: &str, ext: &str) -> ColoredString {
     }
 }
 
-pub fn info_compiled(file: &crate::util::File, time: &std::time::Instant) {
+pub fn info_compiled(file: &crate::File, time: &std::time::Instant) {
     println!(
         "{} '{}' ({:?})",
         color_message("Compiled", &file.ext),
@@ -17,7 +17,7 @@ pub fn info_compiled(file: &crate::util::File, time: &std::time::Instant) {
     );
 }
 
-pub fn error_compiled(file: &crate::util::File, err: Box<impl std::fmt::Display>) {
+pub fn error_compiled(file: &crate::File, err: Box<impl std::fmt::Display>) {
     println!(
         "{} on {}: {}",
         color_message("Failed", &file.ext),

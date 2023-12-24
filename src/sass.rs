@@ -1,4 +1,4 @@
-pub fn compile_scss(file: &crate::util::File) -> Option<grass::Result<String>> {
+pub fn compile_scss(file: &crate::File) -> Option<grass::Result<String>> {
     let syntax = match file.ext.as_str() {
         "css" => grass::InputSyntax::Css,
         "sass" => grass::InputSyntax::Sass,
