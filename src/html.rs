@@ -1,22 +1,16 @@
-#[cfg(debug_assertions)]
-const ROOT: &str = "./dist";
-
-#[cfg(not(debug_assertions))]
-const ROOT: &str = "/uni/dist";
-
 markup::define! {
-    Template(page: crate::Page) {
+    Template<'a>(page: crate::Page, dist_prefix: &'a str) {
         @markup::doctype()
         html[lang="fr"] {
             head {
-                link[rel="stylesheet", href=format!("{}/style/base.css", ROOT)];
+                link[rel="stylesheet", href=format!("{}/style/base.css", dist_prefix)];
 
                 @if let Some(title) = &page.meta.title {
                     title { @title }
                 }
 
                 @if let Some(css) = &page.meta.css {
-                    link[rel="stylesheet", href=format!("{}/style/{}.css", ROOT, css)];
+                    link[rel="stylesheet", href=format!("{}/style/{}.css", dist_prefix, css)];
                 }
 
                 @if page.meta.maths {
@@ -43,7 +37,7 @@ markup::define! {
 
                     script[
                         defer,
-                        src=format!("{}/script/maths.js", ROOT),
+                        src=format!("{}/script/maths.js", dist_prefix),
                     ] {}
                 }
             }
@@ -54,6 +48,6 @@ markup::define! {
     }
 }
 
-pub fn make_page(page: crate::Page) -> String {
-    Template { page }.to_string()
+pub fn make_page(page: crate::Page, dist_prefix: Option<&str>) -> String {
+    Template { page, dist_prefix: dist_prefix.unwrap_or("./dist") }.to_string()
 }

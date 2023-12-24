@@ -3,10 +3,9 @@ pub mod html;
 pub mod sass;
 pub mod util;
 
-pub mod compiler;
 pub mod server;
 
-const OUT: &str = "build";
+pub const OUT: &str = "build";
 
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Meta {

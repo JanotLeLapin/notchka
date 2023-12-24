@@ -50,7 +50,7 @@ async fn hello(req: Request<hyper::body::Incoming>) -> Result<Response<Full<Byte
             "html" => {
                 let dir = std::path::Path::new("content").join(&parent);
                 match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
-                    Some(file) => crate::html::make_page(crate::md::parse_markdown(&std::fs::read_to_string(file.path).unwrap())),
+                    Some(file) => crate::html::make_page(crate::md::parse_markdown(&std::fs::read_to_string(file.path).unwrap()), None),
                     None => "File not found".to_string(),
                 }
             },

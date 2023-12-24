@@ -43,7 +43,7 @@
       src = ./.;
 
       buildInputs = [ packages.ssg ];
-      buildPhase = "${manifest.name} build";
+      buildPhase = "${manifest.name} build --prefix /uni/dist";
       installPhase = "cp -r build $out";
     };
   });
