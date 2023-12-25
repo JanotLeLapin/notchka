@@ -1,12 +1,11 @@
 {
-  description = "My note-taking repository";
+  description = "A static-site generator written in Rust";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     crate2nix.url = "github:kolloch/crate2nix";
     overlay.url = "github:oxalica/rust-overlay";
     systems.url = "github:nix-systems/default";
-    flake-utils.url = "github:Numtide/flake-utils";
   };
 
   outputs = {
@@ -14,28 +13,34 @@
     nixpkgs,
     crate2nix,
     overlay,
-    flake-utils,
+    systems,
     ...
-  }: flake-utils.lib.eachDefaultSystem (system: let
-    pkgs = import nixpkgs {
+  }:
+  let
+    eachSystem = nixpkgs.lib.genAttrs (import systems);
+    pkgs = system: import nixpkgs {
       inherit system;
       overlays = [ (import overlay) ];
     };
-
-    manifest = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
-    ssg =
-      let
+    ssg = pkgs: let
         crate = pkgs.callPackage "${crate2nix}/tools.nix" { inherit pkgs; };
       in import (crate.generatedCargoNix {
         name = manifest.name;
         src = ./.;
-      }) {
-        inherit pkgs;
-      };
-  in rec {
-    devShells.default = pkgs.mkShell {
-      packages = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ];
+      }) { inherit pkgs; };
+
+    manifest = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+  in {
+    devShells = eachSystem (system: { default = (pkgs system).mkShell { packages = [ ((pkgs system).rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ]; }; });
+    packages = eachSystem (system: { default = (ssg (pkgs system)).rootCrate.build; });
+    templates.default = {
+      path = ./template;
+      description = "A starter project using Notchka";
+      welcomeText = ''
+        # Notchka Template
+
+        Welcome to Notchka! Run `notchka dev` from a dev shell to start a development server.
+      '';
     };
-    packages.default = ssg.rootCrate.build;
-  });
+  };
 }
