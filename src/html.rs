@@ -1,16 +1,16 @@
 markup::define! {
-    Template<'a>(page: crate::Page, dist_prefix: &'a str, fs: &'a Vec<crate::md::FsPage>) {
+    Template<'a>(page: crate::Page, prefix: &'a str, fs: &'a Vec<crate::md::FsPage>) {
         @markup::doctype()
         html[lang="fr"] {
             head {
-                link[rel="stylesheet", href=format!("{}/style/base.css", dist_prefix)];
+                link[rel="stylesheet", href=format!("{}/dist/style/base.css", prefix)];
 
                 @if let Some(title) = &page.meta.title {
                     title { @title }
                 }
 
                 @if let Some(css) = &page.meta.css {
-                    link[rel="stylesheet", href=format!("{}/style/{}.css", dist_prefix, css)];
+                    link[rel="stylesheet", href=format!("{}/dist/style/{}.css", prefix, css)];
                 }
 
                 @if page.meta.maths {
@@ -65,7 +65,6 @@ markup::define! {
                         }
                     }
                 }
-                div.content { @markup::raw(page.src.clone()) }
                 nav.sections {
                     h4 { "Contenu" }
                     ul {
@@ -74,11 +73,12 @@ markup::define! {
                         }
                     }
                 }
+                div.content { @markup::raw(page.src.clone()) }
             }
         }
     }
 }
 
-pub fn make_page(page: crate::Page, dist_prefix: Option<&str>, fs: &Vec<crate::md::FsPage>) -> String {
-    Template { page, dist_prefix: dist_prefix.unwrap_or("/dist"), fs }.to_string()
+pub fn make_page(page: crate::Page, prefix: Option<&str>, fs: &Vec<crate::md::FsPage>) -> String {
+    Template { page, prefix: prefix.unwrap_or(""), fs }.to_string()
 }

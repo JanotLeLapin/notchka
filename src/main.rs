@@ -23,16 +23,14 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let files = walk_dir("content");
-
-    let fs = md::file_structure(&files);
-
     use Commands::*;
-
     let cli = Cli::parse();
+
     match cli.command {
         Build { prefix } => {
             let _ = std::fs::remove_dir_all(OUT);
+            let files = walk_dir("content");
+            let fs = md::file_structure(&files, prefix.as_deref().unwrap_or(""));
 
             for file in &files {
                 let content = std::fs::read_to_string(&file.path)?;
