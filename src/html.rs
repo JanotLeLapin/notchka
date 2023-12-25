@@ -87,5 +87,5 @@ markup::define! {
 }
 
 pub fn make_page(page: crate::Page, dist_prefix: Option<&str>, fs: &Vec<crate::md::FsPage>) -> String {
-    Template { page, dist_prefix: dist_prefix.unwrap_or("./dist"), fs }.to_string()
+    Template { page, dist_prefix: dist_prefix.unwrap_or("/dist"), fs }.to_string()
 }
