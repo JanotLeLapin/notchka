@@ -69,4 +69,5 @@ pub struct Meta {
 pub struct Page {
     src: String,
     meta: Meta,
+    sections: Vec<String>,
 }

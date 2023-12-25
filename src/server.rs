@@ -57,7 +57,13 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
                 match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
                     Some(file) => {
                         let start = std::time::Instant::now();
-                        let content = crate::html::make_page(crate::md::parse_markdown(&std::fs::read_to_string(&file.path).unwrap()), None);
+                        let content = match crate::md::parse_markdown(&std::fs::read_to_string(&file.path).unwrap()) {
+                            Ok(md) => crate::html::make_page(md, None),
+                            Err(err) => {
+                                crate::logging::error_compiled(&file, Box::new(&err));
+                                err
+                            },
+                        };
                         crate::logging::info_compiled(&file, &start);
                         content
                     },

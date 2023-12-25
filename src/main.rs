@@ -33,7 +33,13 @@ async fn main() -> std::io::Result<()> {
             for file in walk_dir("content") {
                 let content = std::fs::read_to_string(&file.path)?;
                 let now = std::time::Instant::now();
-                let page = html::make_page(md::parse_markdown(&content), prefix.as_deref());
+                let page = match md::parse_markdown(&content) {
+                    Ok(md) => html::make_page(md, prefix.as_deref()),
+                    Err(err) => {
+                        logging::error_compiled(&file, Box::new(&err));
+                        continue;
+                    },
+                };
                 crate::logging::info_compiled(&file, &now);
 
                 let out = std::path::Path::new(OUT).join(file.path.replace("content/", ""));
