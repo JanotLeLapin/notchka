@@ -7,7 +7,7 @@ pub fn file_structure(files: &Vec<crate::File>) -> Vec<FsPage> {
     files.into_iter().map(|f| {
         let (_, meta) = parse_meta(&std::fs::read_to_string(&f.path).unwrap());
         let mut buf = std::path::PathBuf::new();
-        let mut tmp = "./";
+        let mut tmp = "/";
         for elem in f.path.split("/").skip(1) {
             buf.push(tmp);
             tmp = elem;
