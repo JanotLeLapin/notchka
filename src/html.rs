@@ -39,13 +39,6 @@ markup::define! {
                 }
 
                 @if page.meta.code {
-                    link[
-                        rel="stylesheet",
-                        href="https://cdn.jsdelivr.net/npm/prismjs@v1.29/themes/prism.min.css",
-                        integrity="sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2",
-                        crossorigin="anonymous",
-                    ];
-
                     script[
                         defer,
                         src="https://cdn.jsdelivr.net/npm/prismjs@v1.29/components/prism-core.min.js",
