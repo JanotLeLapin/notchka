@@ -45,7 +45,7 @@ markup::define! {
                     h3 { "Contenu" }
                     ul {
                         @for section in &page.sections {
-                            li { @section }
+                            li { a[href=format!("#{}", section)] { @section } }
                         }
                     }
                 }
