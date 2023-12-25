@@ -40,6 +40,15 @@ markup::define! {
             }
             body {
                 @markup::raw(page.src.clone())
+
+                nav.sections {
+                    h3 { "Contenu" }
+                    ul {
+                        @for section in &page.sections {
+                            li { @section }
+                        }
+                    }
+                }
             }
         }
     }
