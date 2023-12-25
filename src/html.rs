@@ -1,5 +1,5 @@
 markup::define! {
-    Template<'a>(page: crate::Page, dist_prefix: &'a str) {
+    Template<'a>(page: crate::Page, dist_prefix: &'a str, fs: &'a Vec<crate::md::FsPage>) {
         @markup::doctype()
         html[lang="fr"] {
             head {
@@ -39,6 +39,16 @@ markup::define! {
                 }
             }
             body {
+                nav.tree {
+                    h4 { "Pages" }
+                    ul {
+                        @for file in fs.into_iter() {
+                            li {
+                                a[href=&file.path] { @file.name }
+                            }
+                        }
+                    }
+                }
                 div.content { @markup::raw(page.src.clone()) }
                 nav.sections {
                     h4 { "Contenu" }
@@ -53,6 +63,6 @@ markup::define! {
     }
 }
 
-pub fn make_page(page: crate::Page, dist_prefix: Option<&str>) -> String {
-    Template { page, dist_prefix: dist_prefix.unwrap_or("./dist") }.to_string()
+pub fn make_page(page: crate::Page, dist_prefix: Option<&str>, fs: &Vec<crate::md::FsPage>) -> String {
+    Template { page, dist_prefix: dist_prefix.unwrap_or("./dist"), fs }.to_string()
 }

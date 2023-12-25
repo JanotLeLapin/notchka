@@ -23,6 +23,10 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    let files = walk_dir("content");
+
+    let fs = md::file_structure(&files);
+
     use Commands::*;
 
     let cli = Cli::parse();
@@ -30,11 +34,12 @@ async fn main() -> std::io::Result<()> {
         Build { prefix } => {
             let _ = std::fs::remove_dir_all(OUT);
 
-            for file in walk_dir("content") {
+            for file in &files {
                 let content = std::fs::read_to_string(&file.path)?;
                 let now = std::time::Instant::now();
-                let page = match md::parse_markdown(&content) {
-                    Ok(md) => html::make_page(md, prefix.as_deref()),
+                let (content, meta) = md::parse_meta(&content);
+                let page = match md::parse_markdown(&content, meta.unwrap_or_default()) {
+                    Ok(md) => html::make_page(md, prefix.as_deref(), &fs),
                     Err(err) => {
                         logging::error_compiled(&file, Box::new(&err));
                         continue;

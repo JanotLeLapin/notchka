@@ -54,11 +54,13 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
             },
             "html" => {
                 let dir = std::path::Path::new("content").join(&parent);
+                let files = crate::walk_dir("content");
                 match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
                     Some(file) => {
                         let start = std::time::Instant::now();
-                        let content = match crate::md::parse_markdown(&std::fs::read_to_string(&file.path).unwrap()) {
-                            Ok(md) => crate::html::make_page(md, None),
+                        let (content, meta) = crate::md::parse_meta(&std::fs::read_to_string(&file.path).unwrap());
+                        let content = match crate::md::parse_markdown(&content, meta.unwrap_or_default()) {
+                            Ok(md) => crate::html::make_page(md, None, &crate::md::file_structure(&files)),
                             Err(err) => {
                                 crate::logging::error_compiled(&file, Box::new(&err));
                                 err

@@ -1,15 +1,35 @@
-pub fn parse_markdown(mut src: &str) -> Result<crate::Page, String> {
-    // Metadata parsing
-    let meta = if src.starts_with("---") {
+pub struct FsPage {
+    pub name: String,
+    pub path: String,
+}
+
+pub fn file_structure(files: &Vec<crate::File>) -> Vec<FsPage> {
+    files.into_iter().map(|f| {
+        let (_, meta) = parse_meta(&std::fs::read_to_string(&f.path).unwrap());
+        let mut buf = std::path::PathBuf::new();
+        let mut tmp = "./";
+        for elem in f.path.split("/").skip(1) {
+            buf.push(tmp);
+            tmp = elem;
+        }
+        buf.push(format!("{}.html", f.name));
+        FsPage {
+            name: meta.unwrap_or_default().title.unwrap_or(f.name.to_string()),
+            path: buf.to_string_lossy().into_owned(),
+        }
+    }).collect()
+}
+
+pub fn parse_meta(src: &str) -> (String, Option<crate::Meta>) {
+    if src.starts_with("---") {
         let mut iter = src.split("---").skip(1);
         let meta = iter.next().unwrap();
         let meta = serde_yaml::from_str(meta).ok();
-        src = iter.next().unwrap();
-        meta
-    } else {
-        None
-    }.unwrap_or(crate::Meta::default());
+        (iter.next().unwrap().to_string(), meta)
+    } else { (src.to_string(), None) }
+}
 
+pub fn parse_markdown(src: &str, meta: crate::Meta) -> Result<crate::Page, String> {
     let parser = pulldown_cmark::Parser::new(src);
     let mut events = Vec::new();
     let mut sections = Vec::new();
