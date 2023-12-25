@@ -37,6 +37,29 @@ markup::define! {
 
                     script[defer] { @include_str!("../dist/katex.js") }
                 }
+
+                @if page.meta.code {
+                    link[
+                        rel="stylesheet",
+                        href="https://cdn.jsdelivr.net/npm/prismjs@v1.29/themes/prism.min.css",
+                        integrity="sha384-rCCjoCPCsizaAAYVoz1Q0CmCTvnctK0JkfCSjx7IIxexTBg+uCKtFYycedUjMyA2",
+                        crossorigin="anonymous",
+                    ];
+
+                    script[
+                        defer,
+                        src="https://cdn.jsdelivr.net/npm/prismjs@v1.29/components/prism-core.min.js",
+                        integrity="sha384-MXybTpajaBV0AkcBaCPT4KIvo0FzoCiWXgcihYsw4FUkEz0Pv3JGV6tk2G8vJtDc",
+                        crossorigin="anonymous",
+                    ] {}
+
+                    script[
+                        defer,
+                        src="https://cdn.jsdelivr.net/npm/prismjs@v1.29/plugins/autoloader/prism-autoloader.min.js",
+                        integrity="sha384-Uq05+JLko69eOiPr39ta9bh7kld5PKZoU+fF7g0EXTAriEollhZ+DrN8Q/Oi8J2Q",
+                        crossorigin="anonymous",
+                    ] {}
+                }
             }
             body {
                 nav.tree {

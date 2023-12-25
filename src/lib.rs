@@ -63,6 +63,8 @@ pub struct Meta {
     css: Option<String>,
     #[serde(default = "bool::default")]
     maths: bool,
+    #[serde(default = "bool::default")]
+    code: bool,
 }
 
 #[derive(Debug)]
