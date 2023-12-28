@@ -60,11 +60,10 @@ pub fn walk_dir(path: &str) -> Vec<File> {
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Meta {
     title: Option<String>,
-    css: Option<String>,
-    #[serde(default = "bool::default")]
-    maths: bool,
-    #[serde(default = "bool::default")]
-    code: bool,
+    css: Option<Vec<String>>,
+    js: Option<Vec<String>>,
+    #[serde(default = "bool::default")] katex: bool,
+    #[serde(default = "bool::default")] prism: bool,
 }
 
 #[derive(Debug)]

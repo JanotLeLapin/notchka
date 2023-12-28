@@ -1,8 +1,10 @@
 ---
 title: Hello
-css: hello
-maths: true # Include the KaTeX library and stylesheets
-code: true # Include the Prism library
+css:
+  - base
+  - code
+katex: true # Include the KaTeX library and stylesheets
+prism: true # Include the Prism library
 ---
 
 # Welcome to Notchka

@@ -12,10 +12,18 @@ markup::define! {
                 }
 
                 @if let Some(css) = &page.meta.css {
-                    link[rel="stylesheet", href=format!("{}/dist/style/{}.css", prefix, css)];
+                    @for href in css {
+                        link[rel="stylesheet", href=format!("{}/dist/style/{}.css", prefix, href)];
+                    }
                 }
 
-                @if page.meta.maths {
+                @if let Some(js) = &page.meta.js {
+                    @for src in js {
+                        script[defer, src=format!("{}/dist/script/{}.js", prefix, src)] {}
+                    }
+                }
+
+                @if page.meta.katex {
                     link[
                         rel="stylesheet",
                         href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css",
@@ -36,11 +44,9 @@ markup::define! {
                         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05",
                         crossorigin="anonymous",
                     ] {}
-
-                    script[defer] { @include_str!("../dist/katex.js") }
                 }
 
-                @if page.meta.code {
+                @if page.meta.prism {
                     script[
                         defer,
                         src="https://cdn.jsdelivr.net/npm/prismjs@v1.29/components/prism-core.min.js",
