@@ -31,13 +31,14 @@ async fn main() -> std::io::Result<()> {
             let _ = std::fs::remove_dir_all(OUT);
             let files = walk_dir("content");
             let fs = md::file_structure(&files, prefix.as_deref().unwrap_or(""));
+            let tree = html::make_tree(&fs);
 
             for file in &files {
                 let content = std::fs::read_to_string(&file.path)?;
                 let now = std::time::Instant::now();
                 let (content, meta) = md::parse_meta(&content);
                 let page = match md::parse_markdown(&content, meta.unwrap_or_default()) {
-                    Ok(md) => html::make_page(md, prefix.as_deref(), &fs),
+                    Ok(md) => html::make_page(md, prefix.as_deref(), &tree),
                     Err(err) => {
                         logging::error_compiled(&file, Box::new(&err));
                         continue;

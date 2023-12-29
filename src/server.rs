@@ -60,7 +60,7 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
                         let start = std::time::Instant::now();
                         let (content, meta) = crate::md::parse_meta(&std::fs::read_to_string(&file.path).unwrap());
                         let content = match crate::md::parse_markdown(&content, meta.unwrap_or_default()) {
-                            Ok(md) => crate::html::make_page(md, None, &crate::md::file_structure(&files, "")),
+                            Ok(md) => crate::html::make_page(md, None, &crate::html::make_tree(&crate::md::file_structure(&files, ""))),
                             Err(err) => {
                                 crate::logging::error_compiled(&file, Box::new(&err));
                                 err

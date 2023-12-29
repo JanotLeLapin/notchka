@@ -1,5 +1,17 @@
 markup::define! {
-    Template<'a>(page: crate::Page, prefix: &'a str, fs: &'a Vec<crate::md::FsPage>) {
+    Tree<'a>(fs: &'a Vec<crate::md::FsPage>) {
+        nav.tree {
+            h4 { "Pages" }
+            ul {
+                @for file in fs.into_iter() {
+                    li {
+                        a[href=&file.path] { @file.name }
+                    }
+                }
+            }
+        }
+    }
+    Template<'a>(page: crate::Page, prefix: &'a str, tree: &'a Tree<'a>) {
         @markup::doctype()
         html[lang="fr"] {
             head {
@@ -63,16 +75,7 @@ markup::define! {
                 }
             }
             body {
-                nav.tree {
-                    h4 { "Pages" }
-                    ul {
-                        @for file in fs.into_iter() {
-                            li {
-                                a[href=&file.path] { @file.name }
-                            }
-                        }
-                    }
-                }
+                @tree
                 nav.sections {
                     h4 { "Contenu" }
                     ul {
@@ -87,6 +90,10 @@ markup::define! {
     }
 }
 
-pub fn make_page(page: crate::Page, prefix: Option<&str>, fs: &Vec<crate::md::FsPage>) -> String {
-    Template { page, prefix: prefix.unwrap_or(""), fs }.to_string()
+pub fn make_tree<'a>(fs: &'a Vec<crate::md::FsPage>) -> Tree<'a> {
+    Tree { fs }
+}
+
+pub fn make_page(page: crate::Page, prefix: Option<&str>, tree: &Tree<'_>) -> String {
+    Template { page, prefix: prefix.unwrap_or(""), tree }.to_string()
 }
