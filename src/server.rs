@@ -13,15 +13,6 @@ fn mime(ext: &str) -> String {
     format!("{}; charset=utf-8", mime)
 }
 
-fn create_path<'a>(base: &str, iter: impl Iterator<Item = &'a str>) -> std::path::PathBuf {
-    let mut buf = std::path::PathBuf::new();
-    buf.push(base);
-    for item in iter {
-        buf.push(item);
-    }
-    buf
-}
-
 fn find_by_name(mut readdir: std::fs::ReadDir, name: &str) -> Option<String> {
     readdir.find_map(|entry| entry.ok().and_then(|file| {
         if file.path().file_stem().map(|file_name| file_name.to_string_lossy().into_owned() == name).unwrap_or(false) {
@@ -35,7 +26,7 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
     let mut iter = uri.split("/").skip(1).peekable();
     let result = {
         if let Some(_) = iter.next_if_eq(&"dist") {
-            let path = create_path("", iter.clone());
+            let path = crate::create_path("", iter.clone());
             let path = std::path::Path::new(&path);
             match path.extension().map(|s| s.to_string_lossy().into_owned()).as_deref() {
                 Some("css") => {
@@ -49,7 +40,7 @@ pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Ful
             }
         } else {
             // Render HTML page
-            let path = create_path("content", iter);
+            let path = crate::create_path("content", iter);
             let path = if path.is_dir() {
                 Some(path.join("index.md").to_string_lossy().into_owned())
             } else {

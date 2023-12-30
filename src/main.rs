@@ -30,9 +30,9 @@ async fn main() -> std::io::Result<()> {
         Build { prefix } => {
             let _ = std::fs::remove_dir_all(OUT);
             let files = walk_dir("content");
-            let tree = html::make_tree("", &files);
 
             for file in &files {
+                let tree = html::make_tree("", &files);
                 let path = std::path::Path::new(file);
                 let content = std::fs::read_to_string(&file)?;
                 let now = std::time::Instant::now();
@@ -65,6 +65,12 @@ async fn main() -> std::io::Result<()> {
                     },
                     Err(err) => logging::error_compiled(&path, err),
                 };
+            }
+
+            for file in walk_dir("script") {
+                let out = std::path::Path::new(OUT).join("dist").join(&file);
+                std::fs::create_dir_all(out.parent().unwrap())?;
+                std::fs::write(out, std::fs::read_to_string(&file)?)?;
             }
 
             for file in walk_dir("dist") {

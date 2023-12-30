@@ -21,6 +21,15 @@ pub fn walk_dir(path: &str) -> Vec<String> {
     res
 }
 
+pub fn create_path<'a>(base: &str, iter: impl Iterator<Item = &'a str>) -> std::path::PathBuf {
+    let mut buf = std::path::PathBuf::new();
+    buf.push(base);
+    for item in iter {
+        buf.push(item);
+    }
+    buf
+}
+
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Meta {
     title: Option<String>,
