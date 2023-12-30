@@ -30,49 +30,47 @@ async fn main() -> std::io::Result<()> {
         Build { prefix } => {
             let _ = std::fs::remove_dir_all(OUT);
             let files = walk_dir("content");
-            let fs = md::file_structure(&files, prefix.as_deref().unwrap_or(""));
-            let tree = html::make_tree(&fs);
+            let tree = html::make_tree("", &files);
 
             for file in &files {
-                let content = std::fs::read_to_string(&file.path)?;
+                let path = std::path::Path::new(file);
+                let content = std::fs::read_to_string(&file)?;
                 let now = std::time::Instant::now();
                 let (content, meta) = md::parse_meta(&content);
                 let page = match md::parse_markdown(&content, meta.unwrap_or_default()) {
                     Ok(md) => html::make_page(md, prefix.as_deref(), &tree),
                     Err(err) => {
-                        logging::error_compiled(&file, Box::new(&err));
+                        logging::error_compiled(&path, Box::new(&err));
                         continue;
                     },
                 };
-                crate::logging::info_compiled(&file, &now);
+                crate::logging::info_compiled(&path, &now);
 
-                let out = std::path::Path::new(OUT).join(file.path.replace("content/", ""));
+                let out = std::path::Path::new(OUT).join(file.replace("content/", ""));
                 let out = out.parent().unwrap();
                 std::fs::create_dir_all(out)?;
-                std::fs::write(out.join(format!("{}.html", file.name)), page)?;
+                std::fs::write(out.join(format!("{}.html", path.file_stem().unwrap().to_string_lossy().into_owned())), page)?;
             }
 
             for file in walk_dir("style") {
+                let path = std::path::Path::new(&file);
                 let now = std::time::Instant::now();
-                match sass::compile_scss(&file) {
-                    Some(result) => match result {
-                        Ok(result) => {
-                            crate::logging::info_compiled(&file, &now);
-                            let out = std::path::Path::new(OUT).join("dist").join(&file.path);
-                            let out = out.parent().unwrap();
-                            std::fs::create_dir_all(out)?;
-                            std::fs::write(out.join(format!("{}.css", file.name)), result)?;
-                        },
-                        Err(err) => logging::error_compiled(&file, err),
+                match sass::compile_scss(&std::path::Path::new(&file)) {
+                    Ok(result) => {
+                        crate::logging::info_compiled(&path, &now);
+                        let out = std::path::Path::new(OUT).join("dist").join(&file);
+                        let out = out.parent().unwrap();
+                        std::fs::create_dir_all(out)?;
+                        std::fs::write(out.join(format!("{}.css", path.file_stem().unwrap().to_string_lossy().to_owned())), result)?;
                     },
-                    None => logging::error_compiled(&file, Box::new(format!("Unknown format '{}'", file.ext))),
+                    Err(err) => logging::error_compiled(&path, err),
                 };
             }
 
             for file in walk_dir("dist") {
-                let out = std::path::Path::new(OUT).join(&file.path);
+                let out = std::path::Path::new(OUT).join(&file);
                 std::fs::create_dir_all(out.parent().unwrap())?;
-                std::fs::copy(&file.path, out)?;
+                std::fs::copy(&file, out)?;
             }
         },
         Dev { port } => {

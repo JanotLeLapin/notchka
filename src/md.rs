@@ -1,25 +1,3 @@
-pub struct FsPage {
-    pub name: String,
-    pub path: String,
-}
-
-pub fn file_structure(files: &Vec<crate::File>, prefix: &str) -> Vec<FsPage> {
-    files.into_iter().map(|f| {
-        let (_, meta) = parse_meta(&std::fs::read_to_string(&f.path).unwrap());
-        let mut buf = std::path::PathBuf::new();
-        let mut tmp = format!("{}/", prefix);
-        for elem in f.path.split("/").skip(1) {
-            buf.push(tmp);
-            tmp = elem.to_string();
-        }
-        buf.push(format!("{}.html", f.name));
-        FsPage {
-            name: meta.unwrap_or_default().title.unwrap_or(f.name.to_string()),
-            path: buf.to_string_lossy().into_owned(),
-        }
-    }).collect()
-}
-
 pub fn parse_meta(src: &str) -> (String, Option<crate::Meta>) {
     if src.starts_with("---") {
         let mut iter = src.split("---").skip(1);

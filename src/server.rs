@@ -2,10 +2,6 @@ use http_body_util::Full;
 use hyper::{Request, Response};
 use hyper::body::Bytes;
 
-fn find_file(name: &str, path: &str) -> Option<crate::File> {
-    crate::walk_dir(path).into_iter().find(|f| f.name == name)
-}
-
 fn mime(ext: &str) -> String {
     let mime = match ext {
         "css" => "text/css",
@@ -17,74 +13,77 @@ fn mime(ext: &str) -> String {
     format!("{}; charset=utf-8", mime)
 }
 
+fn create_path<'a>(base: &str, iter: impl Iterator<Item = &'a str>) -> std::path::PathBuf {
+    let mut buf = std::path::PathBuf::new();
+    buf.push(base);
+    for item in iter {
+        buf.push(item);
+    }
+    buf
+}
+
+fn find_by_name(mut readdir: std::fs::ReadDir, name: &str) -> Option<String> {
+    readdir.find_map(|entry| entry.ok().and_then(|file| {
+        if file.path().file_stem().map(|file_name| file_name.to_string_lossy().into_owned() == name).unwrap_or(false) {
+            Some(file.path().to_string_lossy().into_owned())
+        } else { None }
+    }))
+}
+
 pub async fn service(req: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, std::convert::Infallible> {
-    let (content_type, content) = {
-        let uri: String = req.uri().to_string().chars().skip(1).collect();
-        let parent = std::path::Path::new(&uri).parent().unwrap().to_string_lossy().into_owned();
-
-        let file: crate::File = uri.to_string().into();
-        let content = match file.ext.as_str() {
-            "css" => {
-                let dir: String = parent.split("/").skip(2).collect();
-                let dir = std::path::Path::new("style").join(dir);
-                match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
-                    Some(file) => {
-                        let start = std::time::Instant::now();
-                        match crate::sass::compile_scss(&file) {
-                            Some(result) => match result {
-                                Ok(content) => {
-                                    crate::logging::info_compiled(&file, &start);
-                                    content
-                                },
-                                Err(err) => {
-                                    crate::logging::error_compiled(&file, err);
-                                    String::new()
-                                }
-                            },
-                            None => {
-                                crate::logging::error_compiled(&file, Box::new(format!("Unknown format '{}'", file.ext)));
-                                String::new()
-                            },
-                        }
-                    },
-                    None => {
-                        String::new()
-                    }
-                }
-            },
-            "html" => {
-                let dir = std::path::Path::new("content").join(&parent);
-                let files = crate::walk_dir("content");
-                match find_file(&file.name, &dir.to_string_lossy().into_owned()) {
-                    Some(file) => {
-                        let start = std::time::Instant::now();
-                        let (content, meta) = crate::md::parse_meta(&std::fs::read_to_string(&file.path).unwrap());
-                        let content = match crate::md::parse_markdown(&content, meta.unwrap_or_default()) {
-                            Ok(md) => crate::html::make_page(md, None, &crate::html::make_tree(&crate::md::file_structure(&files, ""))),
-                            Err(err) => {
-                                crate::logging::error_compiled(&file, Box::new(&err));
-                                err
-                            },
-                        };
-                        crate::logging::info_compiled(&file, &start);
-                        content
-                    },
-                    None => "File not found".to_string(),
-                }
-            },
-            _ => match std::fs::read_to_string(uri) {
-                Ok(content) => content,
-                Err(_) => String::new(),
-            },
-        };
-
-        (file.ext, content)
+    let uri = req.uri().to_string();
+    let mut iter = uri.split("/").skip(1).peekable();
+    let result = {
+        if let Some(_) = iter.next_if_eq(&"dist") {
+            let path = create_path("", iter.clone());
+            let path = std::path::Path::new(&path);
+            match path.extension().map(|s| s.to_string_lossy().into_owned()).as_deref() {
+                Some("css") => {
+                    if let Ok(readdir) = std::fs::read_dir(path.parent().unwrap()) {
+                        if let Some(path) = find_by_name(readdir, &path.file_stem().unwrap().to_string_lossy().into_owned()) {
+                            crate::sass::compile_scss(&std::path::Path::new(&path)).ok().map(|content| ("css".to_string(), content))
+                        } else { None }
+                    } else { None }
+                },
+                _ => std::fs::read_to_string(path.to_string_lossy().into_owned()).ok().map(|content| (path.extension().unwrap().to_string_lossy().into_owned(), content)),
+            }
+        } else {
+            // Render HTML page
+            let path = create_path("content", iter);
+            let path = if path.is_dir() {
+                Some(path.join("index.md").to_string_lossy().into_owned())
+            } else {
+                if let Some(readdir) = path.parent().and_then(|parent| std::fs::read_dir(parent).ok()) {
+                    find_by_name(readdir, &path.file_stem().unwrap().to_string_lossy().into_owned())
+                } else { None }
+            };
+            if let Some(path) = path {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    let files = crate::walk_dir("content");
+                    let tree = crate::html::make_tree("", &files);
+                    let (content, meta) = crate::md::parse_meta(&content);
+                    let page = match crate::md::parse_markdown(&content, meta.unwrap_or_default()) {
+                        Ok(md) => crate::html::make_page(md, None, &tree),
+                        Err(err) => {
+                            crate::logging::error_compiled(&std::path::Path::new(&path), Box::new(&err));
+                            "File not found".to_string()
+                        },
+                    };
+                    Some(("html".to_string(), page))
+                } else { None }
+            } else { None }
+        }
     };
 
-    let response = Response::builder()
-        .header("Content-Type", mime(&content_type))
-        .body(Full::new(Bytes::from(content)))
-        .unwrap();
-
-    Ok(response)
+    if let Some((content_type, content)) = result {
+        Ok(Response::builder()
+            .header("Content-Type", mime(&content_type))
+            .body(Full::new(Bytes::from(content))).unwrap()
+        )
+    } else {
+        Ok(Response::builder()
+            .status(500)
+            .body(Full::new(Bytes::new())).unwrap()
+        )
+    }
 }

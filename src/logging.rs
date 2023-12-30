@@ -8,20 +8,20 @@ fn color_message(msg: &str, ext: &str) -> ColoredString {
     }
 }
 
-pub fn info_compiled(file: &crate::File, time: &std::time::Instant) {
+pub fn info_compiled(path: &std::path::Path, time: &std::time::Instant) {
     println!(
         "{} '{}' ({:?})",
-        color_message("Compiled", &file.ext),
-        file.path,
+        color_message("Compiled", &path.extension().unwrap().to_string_lossy().into_owned()),
+        path.display(),
         time.elapsed(),
     );
 }
 
-pub fn error_compiled(file: &crate::File, err: Box<impl std::fmt::Display>) {
+pub fn error_compiled(path: &std::path::Path, err: Box<impl std::fmt::Display>) {
     println!(
         "{} on {}: {}",
-        color_message("Failed", &file.ext),
-        file.path,
+        color_message("Failed", &path.extension().unwrap().to_string_lossy().into_owned()),
+        path.display(),
         err,
     );
 }

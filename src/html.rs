@@ -1,17 +1,17 @@
 markup::define! {
-    Tree<'a>(fs: &'a Vec<crate::md::FsPage>) {
+    Tree(pages: Vec<(String, String)>) {
         nav.tree {
             h4 { "Pages" }
             ul {
-                @for file in fs.into_iter() {
+                @for (name, path) in pages.into_iter() {
                     li {
-                        a[href=&file.path] { @file.name }
+                        a[href=&path] { @name }
                     }
                 }
             }
         }
     }
-    Template<'a>(page: crate::Page, prefix: &'a str, tree: &'a Tree<'a>) {
+    Template<'a>(page: crate::Page, prefix: &'a str, tree: &'a Tree) {
         @markup::doctype()
         html[lang="fr"] {
             head {
@@ -90,10 +90,19 @@ markup::define! {
     }
 }
 
-pub fn make_tree<'a>(fs: &'a Vec<crate::md::FsPage>) -> Tree<'a> {
-    Tree { fs }
+pub fn make_tree(prefix: &str, files: &Vec<String>) -> Tree {
+    let pages = files.into_iter().map(|f| {
+        let path = std::path::Path::new(prefix).join(f);
+        let path = std::path::Path::new(&path);
+        let (_, meta) = crate::md::parse_meta(&std::fs::read_to_string(path).unwrap());
+        (
+            meta.unwrap_or_default().title.unwrap_or(path.file_stem().unwrap().to_string_lossy().into_owned()),
+            path.to_string_lossy().into_owned(),
+        )
+    }).collect();
+    Tree { pages }
 }
 
-pub fn make_page(page: crate::Page, prefix: Option<&str>, tree: &Tree<'_>) -> String {
+pub fn make_page(page: crate::Page, prefix: Option<&str>, tree: &Tree) -> String {
     Template { page, prefix: prefix.unwrap_or(""), tree }.to_string()
 }
