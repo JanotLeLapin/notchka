@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
             let files = walk_dir("content");
 
             for file in &files {
-                let tree = html::make_tree("", &files);
+                let tree = html::make_tree(prefix.as_deref().unwrap_or(""), &files);
                 let path = std::path::Path::new(file);
                 let content = std::fs::read_to_string(&file)?;
                 let now = std::time::Instant::now();

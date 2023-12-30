@@ -1,17 +1,17 @@
 markup::define! {
-    Tree(pages: Vec<(String, String)>) {
+    Tree<'a>(prefix: &'a str, pages: Vec<(String, String)>) {
         nav.tree {
             h4 { "Pages" }
             ul {
                 @for (name, path) in pages.into_iter() {
                     li {
-                        a[href=&path] { @name }
+                        a[href=&format!("{}{}.html", prefix, path)] { @name }
                     }
                 }
             }
         }
     }
-    Template<'a>(page: crate::Page, prefix: &'a str, tree: &'a Tree) {
+    Template<'a>(page: crate::Page, prefix: &'a str, tree: &'a Tree<'a>) {
         @markup::doctype()
         html[lang="fr"] {
             head {
@@ -90,17 +90,16 @@ markup::define! {
     }
 }
 
-pub fn make_tree(prefix: &str, files: &Vec<String>) -> Tree {
+pub fn make_tree<'a>(prefix: &'a str, files: &Vec<String>) -> Tree<'a> {
     let pages = files.into_iter().map(|f| {
-        let path = std::path::Path::new(prefix).join(f);
-        let path = std::path::Path::new(&path);
+        let path = std::path::Path::new(&f);
         let (_, meta) = crate::md::parse_meta(&std::fs::read_to_string(path).unwrap());
         (
             meta.unwrap_or_default().title.unwrap_or(path.file_stem().unwrap().to_string_lossy().into_owned()),
-            path.to_string_lossy().into_owned(),
+            path.with_extension("").to_string_lossy().into_owned().split("/").skip(1).map(|s| format!("/{}", s)).collect(),
         )
     }).collect();
-    Tree { pages }
+    Tree { prefix, pages }
 }
 
 pub fn make_page(page: crate::Page, prefix: Option<&str>, tree: &Tree) -> String {
