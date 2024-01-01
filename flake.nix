@@ -36,7 +36,8 @@
       src = ./.;
     }) { inherit pkgs; }).rootCrate.build.override {
       features =
-        if params.dev then ["dev"] else [];
+        (if params.dev then ["dev"] else []) ++
+        (if params.katex then ["katex"] else []);
     };
     templates.default = {
       path = ./template;

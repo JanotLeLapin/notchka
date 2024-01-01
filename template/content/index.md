@@ -1,6 +1,5 @@
 ---
 title: Hello
-js: [katex]
 css:
   - base
   - code

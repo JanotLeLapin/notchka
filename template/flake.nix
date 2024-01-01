@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     systems.url = "github:nix-systems/default";
-    rust-notchka.url = "git+file:///home/josephd/programs/notchka";
+    rust-notchka.url = "github:JanotLeLapin/notchka";
   };
 
   outputs = {
@@ -20,7 +20,11 @@
   in {
     devShells = eachSystem (system: {
       default = (pkgs system).mkShell {
-        packages = [ (rust-notchka.package { inherit system; dev = true; }) ];
+        packages = [ (rust-notchka.package {
+          inherit system;
+          dev = true;
+          katex = true;
+        }) ];
       };
     });
     packages = eachSystem (system: {
@@ -29,7 +33,11 @@
         version = "0.1.0";
         src = ./.;
 
-        buildInputs = [ (rust-notchka.package { inherit system; dev = false; }) ];
+        buildInputs = [ (rust-notchka.package {
+          inherit system;
+          dev = false;
+          katex = true;
+        }) ];
         buildPhase = "notchka build";
         installPhase = "cp -r build $out";
       };

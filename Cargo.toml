@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
+default = ["dev", "katex"]
 dev = ["dep:http-body-util", "dep:hyper", "dep:hyper-util", "tokio/net"]
+katex = ["dep:katex"]
 
 [dependencies]
 colored = "2.1"
@@ -23,3 +25,5 @@ pulldown-cmark = "0.9"
 markup = "0.15"
 
 grass = "0.13.1"
+
+katex = { version = "0.4.6", optional = true }
