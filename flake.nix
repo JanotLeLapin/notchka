@@ -18,21 +18,26 @@
   }:
   let
     eachSystem = nixpkgs.lib.genAttrs (import systems);
-    pkgs = system: import nixpkgs {
+    pkgsFn = system: import nixpkgs {
       inherit system;
       overlays = [ (import overlay) ];
     };
-    ssg = pkgs: let
-        crate = pkgs.callPackage "${crate2nix}/tools.nix" { inherit pkgs; };
-      in import (crate.generatedCargoNix {
-        name = manifest.name;
-        src = ./.;
-      }) { inherit pkgs; };
 
     manifest = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
   in {
-    devShells = eachSystem (system: { default = (pkgs system).mkShell { packages = [ ((pkgs system).rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ]; }; });
-    packages = eachSystem (system: { default = (ssg (pkgs system)).rootCrate.build; });
+    devShells = eachSystem (system: let
+      pkgs = (pkgsFn system);
+    in { default = pkgs.mkShell { packages = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ]; }; });
+    package = params: let
+      pkgs = (pkgsFn params.system);
+      crate = pkgs.callPackage "${crate2nix}/tools.nix" { inherit pkgs; };
+    in (import (crate.generatedCargoNix {
+      name = manifest.name;
+      src = ./.;
+    }) { inherit pkgs; }).rootCrate.build.override {
+      features =
+        if params.dev then ["dev"] else [];
+    };
     templates.default = {
       path = ./template;
       description = "A starter project using Notchka";
