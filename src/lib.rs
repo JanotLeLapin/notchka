@@ -3,6 +3,7 @@ pub mod html;
 pub mod sass;
 
 pub mod logging;
+#[cfg(feature = "dev")]
 pub mod server;
 
 pub const OUT: &str = "build";

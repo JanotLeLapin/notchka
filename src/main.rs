@@ -21,6 +21,31 @@ struct Cli {
     path: Option<String>,
 }
 
+#[cfg(not(feature = "dev"))]
+pub async fn server(_: u16) {
+    println!("Notchka was compiled without the dev feature enabled!");
+}
+
+#[cfg(feature = "dev")]
+pub async fn server(port: u16) {
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+
+    loop {
+        let (stream, _) = listener.accept().await.unwrap();
+        let io = hyper_util::rt::TokioIo::new(stream);
+
+        tokio::spawn(async move {
+            if let Err(err) = hyper::server::conn::http1::Builder::new()
+                .serve_connection(io, hyper::service::service_fn(server::service))
+                    .await
+                    {
+                        println!("Could not start dev server: {}", err);
+                    }
+        });
+    }
+}
+
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     use Commands::*;
@@ -79,24 +104,7 @@ async fn main() -> std::io::Result<()> {
                 std::fs::copy(&file, out)?;
             }
         },
-        Dev { port } => {
-            let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port.unwrap_or(8080)));
-            let listener = tokio::net::TcpListener::bind(addr).await?;
-
-            loop {
-                let (stream, _) = listener.accept().await?;
-                let io = hyper_util::rt::TokioIo::new(stream);
-
-                tokio::spawn(async move {
-                    if let Err(err) = hyper::server::conn::http1::Builder::new()
-                        .serve_connection(io, hyper::service::service_fn(server::service))
-                            .await
-                            {
-                                println!("Could not start dev server: {}", err);
-                            }
-                });
-            }
-        },
+        Dev { port } => { server(port.unwrap_or(8080)).await },
     };
 
     Ok(())
