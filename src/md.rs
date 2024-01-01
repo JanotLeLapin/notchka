@@ -13,21 +13,28 @@ fn latex(src: &str) -> katex::Result<String> {
     let mut iter = src.chars().peekable();
 
     let mut katex = false;
+    let mut display_mode = false;
     let mut tmp = String::new();
-
-    let opts = katex::Opts::builder().display_mode(false).output_type(katex::OutputType::HtmlAndMathml).build().unwrap();
 
     while let Some(c) = iter.next() {
         if katex {
             if c == '$' {
-                katex = false;
+                let opts = katex::Opts::builder().display_mode(display_mode).output_type(katex::OutputType::HtmlAndMathml).build().unwrap();
                 result.push_str(&katex::render_with_opts(&tmp, &opts)?);
+
                 tmp.clear();
+                katex = false;
+                display_mode = false;
+                iter.next_if_eq(&'$');
             } else { tmp.push(c); }
         }
         else {
-            if c == '$' { katex = true; }
-            else { result.push(c); }
+            if (c == ' ' || c == '\n') && Some(&'$') == iter.peek() {
+                katex = true;
+                iter.next();
+                if let Some(_) = iter.next_if_eq(&'$') { display_mode = true; }
+            }
+            result.push(c);
         }
     }
 
