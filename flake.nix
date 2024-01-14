@@ -3,42 +3,25 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
-    crate2nix.url = "github:kolloch/crate2nix";
     overlay.url = "github:oxalica/rust-overlay";
-    systems.url = "github:nix-systems/default";
   };
 
   outputs = {
-    self,
     nixpkgs,
-    crate2nix,
     overlay,
-    systems,
     ...
   }:
   let
-    eachSystem = nixpkgs.lib.genAttrs (import systems);
-    pkgsFn = system: import nixpkgs {
-      inherit system;
+    eachSystem = fn: nixpkgs.lib.genAttrs [
+      "x86_64-linux"
+      "aarch64-linux"
+    ] (system: let
       overlays = [ (import overlay) ];
-    };
-
-    manifest = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package;
+      pkgs = (import nixpkgs { inherit system overlays; });
+    in (fn { inherit system pkgs; }));
   in {
-    devShells = eachSystem (system: let
-      pkgs = (pkgsFn system);
-    in { default = pkgs.mkShell { packages = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ]; }; });
-    package = params: let
-      pkgs = (pkgsFn params.system);
-      crate = pkgs.callPackage "${crate2nix}/tools.nix" { inherit pkgs; };
-    in (import (crate.generatedCargoNix {
-      name = manifest.name;
-      src = ./.;
-    }) { inherit pkgs; }).rootCrate.build.override {
-      features =
-        (if params.dev then ["dev"] else []) ++
-        (if params.katex then ["katex"] else []);
-    };
+    devShells = eachSystem ({ pkgs, ... }: { default = pkgs.callPackage ./shell.nix {}; });
+    packages = eachSystem ({ pkgs, ... }: { default = pkgs.callPackage ./default.nix {}; });
     templates.default = {
       path = ./template;
       description = "A starter project using Notchka";
